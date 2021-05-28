@@ -177,18 +177,8 @@ class MainActivity : BaseActivity() {
 
                 }
                 }
-
-//                if (opArray[i - 1] == "+"){
-//                    total += numberArray[i].toDouble()
-//                }else if (opArray[i - 1] == "-"){
-//                    total -= numberArray[i].toDouble()
-//                }else if (opArray[i - 1] == "/"){
-//                    total /= numberArray[i].toDouble()
-//                }else if (opArray[i - 1] == "x"){
-//                    total *= numberArray[i].toDouble()
-//                }
             }
-
+            
         }
 
 //        total.toString()
