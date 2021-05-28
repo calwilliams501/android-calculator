@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -8,13 +9,13 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
-import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Call
-import retrofit2.Response
 import retrofit2.Callback
+import retrofit2.Response
+
 
 class Settings : BaseActivity() {
 
@@ -25,6 +26,12 @@ class Settings : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        if (intent.extras != null) {
+            if (intent.extras!!.containsKey("anyKey")) {
+                val anyKey = intent.getIntExtra("anyKey", 0)
+                Toast.makeText(this, anyKey.toString(), Toast.LENGTH_SHORT).show()
+            }
+        }
         findViewById<Button>(R.id.APIButton).setOnClickListener {
             testApi()
         }
@@ -32,7 +39,7 @@ class Settings : BaseActivity() {
             testApiResponse()
         }
         findViewById<Button>(R.id.submitButton).setOnClickListener {
-            submitInputNumber()
+            confirmRequest()
         }
         prefs = this.getSharedPreferences(PREFS_FILE, 0)
         findViewById<Button>(R.id.save).setOnClickListener {
@@ -84,11 +91,13 @@ class Settings : BaseActivity() {
     }
 
     private fun testApi() {
-        val retIn = RetrofitInstance.getRetrofitInstance("http://192.168.180.109/").create(RetrofitInterface::class.java)
+        val retIn = RetrofitInstance.getRetrofitInstance("http://192.168.180.107/")
+            .create(RetrofitInterface::class.java)
         retIn.testAPI().enqueue(object : Callback<Void> {
             override fun onFailure(call: Call<Void>, t: Throwable) {
                 connFail()
             }
+
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 connSuccess(response)
             }
@@ -98,19 +107,24 @@ class Settings : BaseActivity() {
 //            override fun onFailure
 //        })
     }
+
     private fun connFail() {
         Toast.makeText(this, "No response from the database", Toast.LENGTH_LONG).show()
     }
+
     private fun connSuccess(response: Response<Void>) {
         Toast.makeText(this, "Response code " + response.code(), Toast.LENGTH_LONG).show()
+        longVibrationPattern()
     }
 
     private fun testApiResponse() {
-        val retIn = RetrofitInstance.getRetrofitInstance("http://192.168.180.109/").create(RetrofitInterface::class.java)
+        val retIn = RetrofitInstance.getRetrofitInstance("http://192.168.180.107/")
+            .create(RetrofitInterface::class.java)
         retIn.testAPIResponse().enqueue(object : Callback<TestResponse> {
             override fun onFailure(call: Call<TestResponse>, t: Throwable) {
                 connFail()
             }
+
             override fun onResponse(call: Call<TestResponse>, response: Response<TestResponse>) {
 
                 val thing: TestResponse = response.body()!!
@@ -118,20 +132,23 @@ class Settings : BaseActivity() {
                 val message = thing.getMessage()
                 val day = thing.getDay()
                 testDayAndMessage(message, day)
+                longVibrationPattern()
 
-//                val message:String? = response.body()?.getMessage()
+
             }
         })
     }
 
-    private fun testDayAndMessage(message:String?, day:String?) {
+    private fun testDayAndMessage(message: String?, day: String?) {
         Toast.makeText(this, "Returned data: $message, $day", Toast.LENGTH_LONG).show()
     }
 
     private fun submitInputNumber() {
-        val retIn = RetrofitInstance.getRetrofitInstance("http://192.168.180.109/").create(RetrofitInterface::class.java)
-        val number:RequestBody = findViewById<EditText>(R.id.editTextNumber).text.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-        retIn.submitNumberAPI(number).enqueue(object : Callback<TestResponse>{
+        val retIn = RetrofitInstance.getRetrofitInstance("http://192.168.180.107/")
+            .create(RetrofitInterface::class.java)
+        val number: RequestBody = findViewById<EditText>(R.id.editTextNumber).text.toString()
+            .toRequestBody("text/plain".toMediaTypeOrNull())
+        retIn.submitNumberAPI(number).enqueue(object : Callback<TestResponse> {
             override fun onFailure(call: Call<TestResponse>, t: Throwable) {
                 connFail()
             }
@@ -145,8 +162,20 @@ class Settings : BaseActivity() {
         })
     }
 
+    private fun confirmRequest() {
+        val builder = AlertDialog.Builder(this)
+        with(builder) {
+            setTitle("Confirm Number")
+            setMessage("Are you sure this is the number you want to submit?")
+            setPositiveButton("Confirm") { _, _ ->
+                submitInputNumber()
+            }
+            setNegativeButton("Cancel", null)
+            show()
+        }
+    }
+
     private fun passNumber(number: String?) {
         Toast.makeText(this, number, Toast.LENGTH_LONG).show()
     }
-
 }

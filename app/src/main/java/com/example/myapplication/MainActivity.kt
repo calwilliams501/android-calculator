@@ -1,14 +1,14 @@
 package com.example.myapplication
 
-import android.app.Activity
+import android.Manifest
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 
 class MainActivity : BaseActivity() {
 
@@ -35,16 +35,16 @@ class MainActivity : BaseActivity() {
 
         numberHolder = findViewById(R.id.numberHolder)
 
-        findViewById<TextView>(R.id.btn1).setOnClickListener{logNumber("1")}
-        findViewById<TextView>(R.id.btn2).setOnClickListener{logNumber("2")}
-        findViewById<TextView>(R.id.btn3).setOnClickListener{logNumber("3")}
-        findViewById<TextView>(R.id.btn4).setOnClickListener{logNumber("4")}
-        findViewById<TextView>(R.id.btn5).setOnClickListener{logNumber("5")}
-        findViewById<TextView>(R.id.btn6).setOnClickListener{logNumber("6")}
-        findViewById<TextView>(R.id.btn7).setOnClickListener{logNumber("7")}
-        findViewById<TextView>(R.id.btn8).setOnClickListener{logNumber("8")}
-        findViewById<TextView>(R.id.btn9).setOnClickListener{logNumber("9")}
-        findViewById<TextView>(R.id.btn0).setOnClickListener{logNumber("0")}
+        findViewById<TextView>(R.id.btn1).setOnClickListener{numPadInput("1")}
+        findViewById<TextView>(R.id.btn2).setOnClickListener{numPadInput("2")}
+        findViewById<TextView>(R.id.btn3).setOnClickListener{numPadInput("3")}
+        findViewById<TextView>(R.id.btn4).setOnClickListener{numPadInput("4")}
+        findViewById<TextView>(R.id.btn5).setOnClickListener{numPadInput("5")}
+        findViewById<TextView>(R.id.btn6).setOnClickListener{numPadInput("6")}
+        findViewById<TextView>(R.id.btn7).setOnClickListener{numPadInput("7")}
+        findViewById<TextView>(R.id.btn8).setOnClickListener{numPadInput("8")}
+        findViewById<TextView>(R.id.btn9).setOnClickListener{numPadInput("9")}
+        findViewById<TextView>(R.id.btn0).setOnClickListener{numPadInput("0")}
 
         findViewById<TextView>(R.id.clear).setOnClickListener{reset()}
 
@@ -54,7 +54,7 @@ class MainActivity : BaseActivity() {
         findViewById<TextView>(R.id.multiply).setOnClickListener{handleOperators("x")}
         findViewById<TextView>(R.id.divide).setOnClickListener{handleOperators("/")}
 
-        findViewById<TextView>(R.id.decimal).setOnClickListener{logNumber(".")}
+        findViewById<TextView>(R.id.decimal).setOnClickListener{numPadInput(".")}
 
         findViewById<Button>(R.id.settings).setOnClickListener{goToSettings()}
     }
@@ -68,29 +68,73 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when(requestCode) {
+            CAM_PERM_REQUEST -> {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    goToSettings()
+                } else {
+                    Toast.makeText(this, "Without permission you cannot access this function", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     private fun goToSettings() {
-        val intent = Intent(this, Settings::class.java)
-        startActivityForResult(intent, INTENT_SETTINGS)
+
+        if (canUseCam()) {
+
+            val intent = Intent(this, Settings::class.java)
+            intent.putExtra("anyKey", 9)
+            startActivityForResult(intent, INTENT_SETTINGS)
+
+        } else {
+
+            requestPerm()
+
+        }
+
+    }
+
+    private fun canUseCam():Boolean {
+
+        val permission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        return permission == PackageManager.PERMISSION_GRANTED
+
+    }
+
+    private fun requestPerm() {
+
+        requestPermissions(arrayOf(Manifest.permission.CAMERA), CAM_PERM_REQUEST)
+
     }
 
     //  applies screen clicks to a numerical or operatic string
 
-    private fun logNumber(number:String){
+    private fun numPadInput(inp:String) {
+
+        onClickVibration()
+
         if (equalsPressed) {
-            numberArray.clear()
-            opArray.clear()
+            clearArrays()
         }
+
         if (input == "0") input = ""
-        Log.d("numberOutput",number.toString())
-        input += number.toString()
+
+        Log.d("numberOutput",inp)
+
+        input += inp
         numberHolder.text = input
         equalsPressed = false
         opPressed = false
-    }
-
-    private fun finishSum(){
 
     }
+
     private fun handleOperators(operator:String) {
         if (equalsPressed) {
             opArray.add(operator)
@@ -127,8 +171,7 @@ class MainActivity : BaseActivity() {
                     "x" -> total *= numberArray[i].toDouble()
                 else -> {
                     Toast.makeText(this, "Something has gone wrong", Toast.LENGTH_SHORT).show()
-                    numberArray.clear()
-                    opArray.clear()
+                    clearArrays()
                     equalsPressed = false
                     opPressed = false
 
@@ -151,9 +194,8 @@ class MainActivity : BaseActivity() {
 //        total.toString()
 //        if (total.takeLast(2) = ".0")
         numberHolder.text = total.toString()
-        numberArray.clear()
+        clearArrays()
         numberArray.add(total.toString())
-        opArray.clear()
         input = "0"
         output()
         equalsPressed = true
@@ -174,8 +216,14 @@ class MainActivity : BaseActivity() {
         Log.d("TAG",opArray.toString())
     }
 
+    private fun clearArrays() {
+        numberArray.clear()
+        opArray.clear()
+    }
+
 companion object{
     private const val INTENT_SETTINGS = 5
+    private const val CAM_PERM_REQUEST = 7
 }
 
 }

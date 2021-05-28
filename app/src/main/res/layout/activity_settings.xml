@@ -119,4 +119,13 @@
         app:layout_constraintStart_toStartOf="@+id/guideline12"
         app:layout_constraintTop_toBottomOf="@+id/editTextNumber" />
 
+    <Button
+        android:id="@+id/networkCheckButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Network Check"
+        app:layout_constraintBottom_toTopOf="@+id/APIResponseButton"
+        app:layout_constraintEnd_toStartOf="@+id/guideline14"
+        app:layout_constraintStart_toStartOf="@+id/guideline12" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
