@@ -181,8 +181,7 @@ class MainActivity : BaseActivity() {
             
         }
 
-//        total.toString()
-//        if (total.takeLast(2) = ".0")
+
         numberHolder.text = total.toString()
         clearArrays()
         numberArray.add(total.toString())
